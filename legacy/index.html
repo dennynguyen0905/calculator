@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Casio fx-580VN X Simulator</title>
+<style>
+:root {
+  --body-bg: #1a1a2e;
+  --calc-bg: #2d2d44;
+  --calc-border: #3d3d5c;
+  --display-bg: #b8d4a8;
+  --display-bg-off: #8fa87a;
+  --display-fg: #1a2a0a;
+  --display-fg-dim: #3a5a1a;
+  --btn-dark: #3a3a5a;
+  --btn-dark-hover: #4a4a6a;
+  --btn-dark-text: #e0e0ff;
+  --btn-dark-border: #2a2a4a;
+  --btn-light: #5a5a7a;
+  --btn-light-hover: #6a6a8a;
+  --btn-light-text: #ffffff;
+  --btn-light-border: #4a4a6a;
+  --btn-orange: #c8a000;
+  --btn-orange-hover: #d8b010;
+  --btn-orange-text: #ffffff;
+  --btn-orange-border: #a08000;
+  --btn-red: #c04040;
+  --btn-red-hover: #d05050;
+  --btn-red-text: #ffffff;
+  --btn-red-border: #a03030;
+  --btn-green: #40a040;
+  --btn-green-hover: #50b050;
+  --btn-green-text: #ffffff;
+  --btn-green-border: #308030;
+  --font-display: 'Courier New', monospace;
+  --font-label: Arial, Helvetica, sans-serif;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --body-bg: #c8c8c8;
+    --calc-bg: #b8b8b8;
+    --calc-border: #a0a0a0;
+    --display-bg: #b8d4a8;
+    --display-bg-off: #8fa87a;
+    --display-fg: #1a2a0a;
+    --display-fg-dim: #4a6a2a;
+    --btn-dark: #d8d8d8;
+    --btn-dark-hover: #e8e8e8;
+    --btn-dark-text: #202040;
+    --btn-dark-border: #b8b8b8;
+    --btn-light: #f0f0f0;
+    --btn-light-hover: #ffffff;
+    --btn-light-text: #202040;
+    --btn-light-border: #d0d0d0;
+    --btn-orange: #e8b800;
+    --btn-orange-hover: #f8c800;
+    --btn-orange-text: #ffffff;
+    --btn-orange-border: #c89800;
+    --btn-red: #e05050;
+    --btn-red-hover: #f06060;
+    --btn-red-text: #ffffff;
+    --btn-red-border: #c04040;
+    --btn-green: #50b050;
+    --btn-green-hover: #60c060;
+    --btn-green-text: #ffffff;
+    --btn-green-border: #409040;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--body-bg);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-label);
+  padding: 16px;
+}
+
+.calculator {
+  background: var(--calc-bg);
+  border: 2px solid var(--calc-border);
+  border-radius: 12px;
+  padding: 12px;
+  width: 340px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Brand header */
+.calc-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+.calc-brand {
+  font-size: 11px;
+  font-weight: bold;
+  color: #8080c0;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.calc-model {
+  font-size: 13px;
+  color: #a0a0c0;
+  font-weight: normal;
+}
+
+/* Mode indicator row */
+.mode-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 6px;
+  margin-bottom: 6px;
+}
+.mode-indicator {
+  display: flex;
+  gap: 8px;
+}
+.mode-tag {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+.mode-tag.deg { background: #4040a0; color: #fff; }
+.mode-tag.rad { background: #a04040; color: #fff; }
+.mode-tag.grad { background: #40a040; color: #fff; }
+.mode-tag.active { display: block; }
+.mode-tag:not(.active) { display: none; }
+.mode-tag.sd { background: #804080; color: #fff; }
+.mode-tag.cmplt { background: #806040; color: #fff; }
+
+.shift-indicator {
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 2px;
+  font-weight: bold;
+}
+.shift-indicator.on { background: #e06020; color: #fff; }
+.shift-indicator.off { background: transparent; color: transparent; }
+
+.alpha-indicator {
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 2px;
+  font-weight: bold;
+}
+.alpha-indicator.on { background: #c08020; color: #fff; }
+.alpha-indicator.off { background: transparent; color: transparent; }
+
+/* Display */
+.display-container {
+  background: var(--display-bg);
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  border: 1px solid #8ab878;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 1px 0 rgba(255,255,255,0.1);
+  position: relative;
+  overflow: hidden;
+}
+.display-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+  pointer-events: none;
+}
+.display-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+.display-expr {
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--display-fg-dim);
+  text-align: right;
+  min-height: 14px;
+  letter-spacing: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 90%;
+}
+.display-status {
+  font-size: 8px;
+  color: var(--display-fg-dim);
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+.display-main {
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: var(--display-fg);
+  text-align: right;
+  letter-spacing: 1px;
+  font-weight: bold;
+  min-height: 30px;
+  word-break: break-all;
+  word-wrap: break-word;
+  overflow: hidden;
+  text-shadow: 0 0 2px rgba(26,42,10,0.3);
+}
+.display-main.error {
+  color: #c02020;
+}
+.display-sub {
+  font-family: var(--font-display);
+  font-size: 10px;
+  color: var(--display-fg-dim);
+  text-align: right;
+  min-height: 13px;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Keypad */
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+}
+
+/* Button base styles */
+button {
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: var(--font-label);
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.05s, box-shadow 0.05s;
+  position: relative;
+  outline: none;
+  -webkit-appearance: none;
+}
+button:active, button.pressed {
+  transform: translateY(1px);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3) !important;
+}
+button.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Button sizes */
+.btn { font-size: 13px; }
+.btn-sm { font-size: 11px; }
+.btn-xs { font-size: 9px; }
+
+.btn-h-2 { grid-row: span 2; }
+
+/* Button colors */
+.btn-dark {
+  background: var(--btn-dark);
+  color: var(--btn-dark-text);
+  box-shadow: 0 2px 0 var(--btn-dark-border), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.btn-dark:hover { background: var(--btn-dark-hover); }
+
+.btn-light {
+  background: var(--btn-light);
+  color: var(--btn-light-text);
+  box-shadow: 0 2px 0 var(--btn-light-border), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.btn-light:hover { background: var(--btn-light-hover); }
+
+.btn-orange {
+  background: var(--btn-orange);
+  color: var(--btn-orange-text);
+  box-shadow: 0 2px 0 var(--btn-orange-border), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+.btn-orange:hover { background: var(--btn-orange-hover); }
+
+.btn-red {
+  background: var(--btn-red);
+  color: var(--btn-red-text);
+  box-shadow: 0 2px 0 var(--btn-red-border), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.btn-red:hover { background: var(--btn-red-hover); }
+
+.btn-green {
+  background: var(--btn-green);
+  color: var(--btn-green-text);
+  box-shadow: 0 2px 0 var(--btn-green-border), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.btn-green:hover { background: var(--btn-green-hover); }
+
+.btn-white {
+  background: #e8e8e8;
+  color: #202040;
+  box-shadow: 0 2px 0 #c0c0c0, inset 0 1px 0 rgba(255,255,255,0.8);
+}
+.btn-white:hover { background: #f8f8f8; }
+
+.btn-wide {
+  grid-column: span 2;
+}
+
+/* Alpha buttons */
+.btn-alpha {
+  background: #c09030;
+  color: #fff;
+  box-shadow: 0 2px 0 #806010, inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.btn-alpha:hover { background: #d0a040; }
+.btn-alpha.pressed {
+  background: #806010;
+}
+
+/* Mode buttons */
+.btn-mode {
+  background: #504070;
+  color: #e0d0ff;
+  box-shadow: 0 2px 0 #302050, inset 0 1px 0 rgba(255,255,255,0.15);
+  font-size: 9px;
+}
+.btn-mode:hover { background: #605080; }
+
+/* Sub labels */
+.btn-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.1;
+  gap: 0;
+}
+.btn-wrap .main-label { font-size: 11px; font-weight: bold; }
+.btn-wrap .sub-label { font-size: 7px; opacity: 0.7; }
+
+/* Thin separator rows */
+.separator {
+  grid-column: 1 / -1;
+  height: 2px;
+  background: rgba(255,255,255,0.05);
+  margin: 1px 0;
+  border-radius: 1px;
+}
+
+/* Popup menu */
+.popup-menu {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2a2a44;
+  border: 1px solid #4a4a6a;
+  border-radius: 6px;
+  padding: 4px;
+  z-index: 100;
+  min-width: 140px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+.popup-menu.active { display: block; }
+.popup-item {
+  display: block;
+  width: 100%;
+  padding: 5px 10px;
+  font-size: 10px;
+  background: transparent;
+  color: #d0d0ff;
+  text-align: left;
+  border-radius: 3px;
+  border: none;
+  cursor: pointer;
+  box-shadow: none;
+  box-sizing: border-box;
+}
+.popup-item:hover { background: #4a4a6a; }
+
+/* Menu bar */
+.menu-bar {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.menu-btn {
+  background: transparent;
+  color: #9090c0;
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  box-shadow: none;
+  border: 1px solid transparent;
+}
+.menu-btn:hover, .menu-btn.active {
+  background: rgba(80,80,160,0.3);
+  border-color: rgba(100,100,180,0.4);
+  color: #c0c0ff;
+}
+.menu-btn:active { transform: none; box-shadow: none !important; }
+
+.menu-panel {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--calc-bg);
+  border: 1px solid var(--calc-border);
+  border-radius: 0 0 8px 8px;
+  padding: 8px;
+  z-index: 50;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+.menu-panel.active { display: block; }
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+.menu-grid button { font-size: 10px; padding: 6px 4px; }
+
+/* Toast notification */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Responsive */
+@media (max-width: 360px) {
+  .calculator { width: 100%; padding: 8px; }
+  .keypad { gap: 3px; }
+  .btn { font-size: 11px; }
+}
+</style>
+</head>
+<body>
+
+<div class="calculator" id="calc">
+  <div class="calc-header">
+    <span class="calc-brand">CASIO</span>
+    <span class="calc-model">fx-580VN X</span>
+  </div>
+
+  <div class="mode-row">
+    <div class="mode-indicator">
+      <span class="mode-tag deg" id="tag-deg">DEG</span>
+      <span class="mode-tag rad" id="tag-rad" style="display:none">RAD</span>
+      <span class="mode-tag grad" id="tag-grad" style="display:none">GRAD</span>
+      <span class="mode-tag sd" id="tag-sd" style="display:none">SD</span>
+      <span class="mode-tag cmplt" id="tag-cmplt" style="display:none">CMPLX</span>
+    </div>
+    <div style="display:flex;gap:4px;align-items:center;">
+      <span class="alpha-indicator off" id="alpha-ind">A</span>
+      <span class="shift-indicator off" id="shift-ind">S</span>
+    </div>
+  </div>
+
+  <div class="menu-bar">
+    <button class="menu-btn" id="menu-math" title="Math">MATH</button>
+    <button class="menu-btn" id="menu-alph" title="Alphabet">ALPHA</button>
+    <button class="menu-btn" id="menu-mode" title="Mode">MODE</button>
+    <button class="menu-btn" id="menu-opt" title="Options">OPTN</button>
+  </div>
+
+  <!-- MATH menu -->
+  <div class="menu-panel" id="panel-math">
+    <div class="menu-grid">
+      <button class="btn-light btn-mode" onclick="calc.insertFunction('abs(')">abs(</button>
+      <button class="btn-light btn-mode" onclick="calc.insertFunction('frac(')">frac(</button>
+      <button class="btn-light btn-mode" onclick="calc.insertFunction('int(')">int(</button>
+      <button class="btn-light btn-mode" onclick="calc.insertFunction('mod(')">mod(</button>
+      <button class="btn-light btn-mode" onclick="calc.insertFunction('gcd(')">gcd(</button>
+      <button class="btn-light btn-mode" onclick="calc.insertFunction('lcm(')">lcm(</button>
+      <button class="btn-light btn-mode" onclick="calc.insertFunction('round(')">round(</button>
+      <button class="btn-light btn-mode" onclick="calc.insertFunction('sign(')">sign(</button>
+      <button class="btn-light btn-mode" onclick="calc.input('!')">x!</button>
+      <button class="btn-light btn-mode" onclick="calc.input('^3')">x&#179;</button>
+      <button class="btn-light btn-mode" onclick="calc.input('^-1')">x&#8315;&#185;</button>
+      <button class="btn-light btn-mode" onclick="calc.closePanel()">&#x2715;</button>
+    </div>
+  </div>
+
+  <!-- ALPHA menu -->
+  <div class="menu-panel" id="panel-alph">
+    <div class="menu-grid">
+      <button class="btn-alpha" onclick="calc.insertText('A')">A</button>
+      <button class="btn-alpha" onclick="calc.insertText('B')">B</button>
+      <button class="btn-alpha" onclick="calc.insertText('C')">C</button>
+      <button class="btn-alpha" onclick="calc.insertText('D')">D</button>
+      <button class="btn-alpha" onclick="calc.insertText('E')">E</button>
+      <button class="btn-alpha" onclick="calc.insertText('F')">F</button>
+      <button class="btn-alpha" onclick="calc.insertText('X')">X</button>
+      <button class="btn-alpha" onclick="calc.insertText('Y')">Y</button>
+      <button class="btn-alpha" onclick="calc.insertText('M')">M</button>
+      <button class="btn-alpha" onclick="calc.insertText('n')">n</button>
+      <button class="btn-alpha" onclick="calc.insertText('r')">r</button>
+      <button class="btn-alpha" onclick="calc.closePanel()">&#x2715;</button>
+    </div>
+  </div>
+
+  <!-- MODE menu -->
+  <div class="menu-panel" id="panel-mode">
+    <div class="menu-grid">
+      <button class="btn-mode" onclick="calc.setMode('comp')">COMP</button>
+      <button class="btn-mode" onclick="calc.setMode('complex')">CMPLX</button>
+      <button class="btn-mode" onclick="calc.setMode('stat')">STAT</button>
+      <button class="btn-mode" onclick="calc.setMode('base')">BASE-N</button>
+      <button class="btn-mode" onclick="calc.setMode('equation')">EQN</button>
+      <button class="btn-mode" onclick="calc.setMode('matrix')">MATRIX</button>
+      <button class="btn-mode" onclick="calc.setMode('table')">TABLE</button>
+      <button class="btn-mode" onclick="calc.setMode('vector')">VECTOR</button>
+      <button class="btn-mode" onclick="calc.setMode('inequality')">INEQ</button>
+      <button class="btn-mode" onclick="calc.setMode('ratio')">RATIO</button>
+      <button class="btn-mode" onclick="calc.closePanel()">&#x2715;</button>
+    </div>
+  </div>
+
+  <!-- OPTN menu -->
+  <div class="menu-panel" id="panel-opt">
+    <div class="menu-grid">
+      <button class="btn-mode" onclick="calc.showConstants()">Constants</button>
+      <button class="btn-mode" onclick="calc.showConversions()">Conv</button>
+      <button class="btn-mode" onclick="calc.setAngleUnit('deg')">DEG</button>
+      <button class="btn-mode" onclick="calc.setAngleUnit('rad')">RAD</button>
+      <button class="btn-mode" onclick="calc.setAngleUnit('grad')">GRAD</button>
+      <button class="btn-mode" onclick="calc.showEngineering()">Eng Sym</button>
+      <button class="btn-mode" onclick="calc.input('π')">&#960;</button>
+      <button class="btn-mode" onclick="calc.input('e')">e</button>
+      <button class="btn-mode" onclick="calc.closePanel()">&#x2715;</button>
+    </div>
+  </div>
+
+  <div class="display-container">
+    <div class="display-top">
+      <span class="display-expr" id="display-expr"></span>
+      <span class="display-status" id="display-status"></span>
+    </div>
+    <div class="display-main" id="display-main">0</div>
+    <div class="display-sub" id="display-sub"></div>
+  </div>
+
+  <div class="keypad" id="keypad">
+    <!-- Row 1 -->
+    <button class="btn btn-dark btn-mode" id="btn-shift" onclick="calc.shift()">
+      <span class="btn-wrap"><span class="main-label">SHIFT</span><span class="sub-label" id="shift-sub">&#x21E7;</span></span>
+    </button>
+    <button class="btn btn-dark btn-mode" id="btn-alpha" onclick="calc.alpha()">
+      <span class="btn-wrap"><span class="main-label">ALPHA</span><span class="sub-label" id="alpha-sub">&#x25A0;</span></span>
+    </button>
+    <button class="btn btn-dark" onclick="calc.clear()">AC</button>
+    <button class="btn btn-dark" onclick="calc.input('(')">(</button>
+    <button class="btn btn-dark" onclick="calc.input(')')">)</button>
+    <button class="btn btn-orange" onclick="calc.input('%')">%</button>
+
+    <!-- Row 2: x^2, x^y, 10^x, e^x, 1/x, ÷ -->
+    <button class="btn btn-dark" onclick="calc.input('^2')">x<sup>2</sup></button>
+    <button class="btn btn-dark" onclick="calc.input('^')">x<sup>y</sup></button>
+    <button class="btn btn-dark" onclick="calc.input('10^')">10<sup>x</sup></button>
+    <button class="btn btn-dark" onclick="calc.input('e^')">e<sup>x</sup></button>
+    <button class="btn btn-dark" onclick="calc.input('^-1')">1/x</button>
+    <button class="btn btn-orange" onclick="calc.input('/')">&#247;</button>
+
+    <!-- Row 3: sin, cos, tan, π, e, × -->
+    <button class="btn btn-dark" onclick="calc.input('sin(')">sin</button>
+    <button class="btn btn-dark" onclick="calc.input('cos(')">cos</button>
+    <button class="btn btn-dark" onclick="calc.input('tan(')">tan</button>
+    <button class="btn btn-dark" onclick="calc.input('π')">&#960;</button>
+    <button class="btn btn-dark" onclick="calc.input('e')">e</button>
+    <button class="btn btn-orange" onclick="calc.input('*')">&#215;</button>
+
+    <!-- Row 4: sin⁻¹, cos⁻¹, tan⁻¹, 7, 8, − -->
+    <button class="btn btn-dark" onclick="calc.input('sin⁻¹(')">sin<sup>-1</sup></button>
+    <button class="btn btn-dark" onclick="calc.input('cos⁻¹(')">cos<sup>-1</sup></button>
+    <button class="btn btn-dark" onclick="calc.input('tan⁻¹(')">tan<sup>-1</sup></button>
+    <button class="btn btn-light" onclick="calc.input('7')">7</button>
+    <button class="btn btn-light" onclick="calc.input('8')">8</button>
+    <button class="btn btn-orange" onclick="calc.input('-')">&#8722;</button>
+
+    <!-- Row 5: log, ln, 10^x, e^x, 9, + -->
+    <button class="btn btn-dark" onclick="calc.input('log(')">log</button>
+    <button class="btn btn-dark" onclick="calc.input('ln(')">ln</button>
+    <button class="btn btn-dark" onclick="calc.input('10^')">10<sup>x</sup></button>
+    <button class="btn btn-dark" onclick="calc.input('e^')">e<sup>x</sup></button>
+    <button class="btn btn-light" onclick="calc.input('9')">9</button>
+    <button class="btn btn-orange" onclick="calc.input('+')">+</button>
+
+    <!-- Row 6: √, x^y, ∛, 4, 5, 6 -->
+    <button class="btn btn-dark" onclick="calc.input('√(')">&#8730;</button>
+    <button class="btn btn-dark" onclick="calc.input('∛(')">&#8731;</button>
+    <button class="btn btn-dark" onclick="calc.input('^')">x<sup>y</sup></button>
+    <button class="btn btn-light" onclick="calc.input('4')">4</button>
+    <button class="btn btn-light" onclick="calc.input('5')">5</button>
+    <button class="btn btn-light" onclick="calc.input('6')">6</button>
+
+    <!-- Row 7: ENG, ×√, |x|, 1, 2, 3 -->
+    <button class="btn btn-dark" onclick="calc.input('√(')">&#215;&#8730;</button>
+    <button class="btn btn-dark" onclick="calc.func('abs')">|x|</button>
+    <button class="btn btn-dark" onclick="calc.input('E')">ENG</button>
+    <button class="btn btn-light" onclick="calc.input('1')">1</button>
+    <button class="btn btn-light" onclick="calc.input('2')">2</button>
+    <button class="btn btn-light" onclick="calc.input('3')">3</button>
+
+    <!-- Row 8: √( , ³√( , Ran#, 0, ., = -->
+    <button class="btn btn-dark" onclick="calc.input('√(')">&#8730;&#40;</button>
+    <button class="btn btn-dark" onclick="calc.input('∛(')">&#8731;&#40;</button>
+    <button class="btn btn-dark btn-mode" onclick="calc.input('Ran#')">Ran#</button>
+    <button class="btn btn-light" onclick="calc.input('0')">0</button>
+    <button class="btn btn-light" onclick="calc.input('.')">.</button>
+    <button class="btn btn-red" onclick="calc.execute()">=</button>
+
+    <!-- Row 9: π, Ans, %, ▶, nCr, Pol( -->
+    <button class="btn btn-dark btn-mode" onclick="calc.input('π')">&#960;</button>
+    <button class="btn btn-dark btn-mode" onclick="calc.input('Ans')">ANS</button>
+    <button class="btn btn-dark" onclick="calc.input('%')">%</button>
+    <button class="btn btn-dark btn-mode" onclick="calc.input('nCr(')">nCr</button>
+    <button class="btn btn-dark btn-mode" onclick="calc.input('nPr(')">nPr</button>
+    <button class="btn btn-dark btn-mode" onclick="calc.input('Pol(')">Pol(</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function() {
+const CONSTANTS = {
+  'c':    { label:'c',    name:'Speed of light',         value:299792458 },
+  'g':    { label:'g',    name:'Gravitational accel.',   value:9.80665 },
+  'G':    { label:'G',    name:'Gravitational constant', value:6.67430e-11 },
+  'μ₀':   { label:'μ₀',   name:'Permeability',          value:1.25663706e-6 },
+  'ε₀':   { label:'ε₀',   name:'Permittivity',          value:8.85418781e-12 },
+  'h':    { label:'h',    name:'Planck constant',        value:6.62607015e-34 },
+  'ħ':    { label:'ħ',    name:'Reduced Planck',        value:1.054571817e-34 },
+  'e':    { label:'e',    name:'Elementary charge',     value:1.602176634e-19 },
+  'Nₐ':   { label:'Nₐ',   name:'Avogadro number',       value:6.02214076e23 },
+  'k':    { label:'k',    name:'Boltzmann constant',    value:1.380649e-23 },
+  'R':    { label:'R',    name:'Gas constant',          value:8.314462618 },
+  'atm':  { label:'atm',  name:'Atmosphere',            value:101325 },
+  'mₑ':   { label:'mₑ',   name:'Electron mass',        value:9.10938370e-31 },
+  'mₚ':   { label:'mₚ',   name:'Proton mass',          value:1.67262192369e-27 },
+  'mₙ':   { label:'mₙ',   name:'Neutron mass',         value:1.67492749804e-27 },
+};
+
+class Calculator {
+  constructor() {
+    this.display = '0';
+    this.lastAnswer = 0;
+    this.isShifted = false;
+    this.isAlpha = false;
+    this.angleUnit = 'deg';
+    this.mode = 'comp';
+    this.memory = 0;
+    this.history = [];
+    this._cursor = 0;
+    this._updateDisplay();
+    this._updateIndicators();
+    this._bindKeyboard();
+    this.historyIdx = -1;
+  }
+
+  input(ch) {
+    this._clearShift();
+    if (this.display === '0' && !isNaN(ch) && ch !== '.') {
+      this.display = ch;
+    } else if (ch === '.' && /[0-9]$/.test(this.display)) {
+      // only add if last char is digit
+      this.display += ch;
+    } else {
+      this.display += ch;
+    }
+    this._updateDisplay();
+    this._playKey();
+  }
+
+  insertFunction(name) {
+    this._clearShift();
+    this.input(name);
+    this.closePanel();
+  }
+
+  insertText(text) {
+    this._clearShift();
+    this.input(text);
+    this.closePanel();
+  }
+
+  func(name) {
+    this._clearShift();
+    if (name === 'log' || name === 'ln' || name === 'sin' || name === 'cos' ||
+        name === 'tan' || name === 'abs') {
+      this.input(name + '(');
+    } else {
+      this.input(name + '(');
+    }
+  }
+
+  _toRad(x) {
+    if (this.angleUnit === 'deg') return x * Math.PI / 180;
+    if (this.angleUnit === 'grad') return x * Math.PI / 200;
+    return x;
+  }
+
+  _fromRad(x) {
+    if (this.angleUnit === 'deg') return x * 180 / Math.PI;
+    if (this.angleUnit === 'grad') return x * 200 / Math.PI;
+    return x;
+  }
+
+  shift() {
+    this.isShifted = !this.isShifted;
+    this.isAlpha = false;
+    this._updateIndicators();
+    this._updateShiftLabels();
+    this._playKey();
+  }
+
+  alpha() {
+    this.isAlpha = !this.isAlpha;
+    this.isShifted = false;
+    this._updateIndicators();
+    this._updateShiftLabels();
+    this._playKey();
+  }
+
+  _clearShift() {
+    this.isShifted = false;
+    this.isAlpha = false;
+    this._updateIndicators();
+    this._updateShiftLabels();
+  }
+
+  clear() {
+    this.display = '0';
+    this._clearShift();
+    this._updateDisplay();
+  }
+
+  execute() {
+    this._clearShift();
+    let expr = this.display;
+
+    // Normalize symbols
+    expr = expr.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
+    expr = expr.replace(/π/g, String(Math.PI));
+    expr = expr.replace(/√\(/g, 'Math.sqrt(');
+    expr = expr.replace(/∛\(/g, 'Math.cbrt(');
+
+    // Trigonometric with angle conversion
+    expr = expr.replace(/sin\⁻¹\(/g, 'asin_(');
+    expr = expr.replace(/cos\⁻¹\(/g, 'acos_(');
+    expr = expr.replace(/tan\⁻¹\(/g, 'atan_(');
+    expr = expr.replace(/sin\(/g, 'sin_(');
+    expr = expr.replace(/cos\(/g, 'cos_(');
+    expr = expr.replace(/tan\(/g, 'tan_(');
+
+    expr = expr.replace(/\^2/g, '**2');
+    expr = expr.replace(/\^-1/g, '**-1');
+    expr = expr.replace(/\^3/g, '**3');
+    expr = expr.replace(/\^/g, '**');
+    expr = expr.replace(/ln\(/g, 'Math.log(');
+    expr = expr.replace(/log\(/g, 'Math.log10(');
+    expr = expr.replace(/e\^/g, 'Math.exp(');
+    expr = expr.replace(/10\^/g, '10**');
+    expr = expr.replace(/Ans/g, String(this.lastAnswer));
+
+    // Implicit multiplication
+    expr = expr.replace(/(\d)([A-Za-zπe])/g, '$1*$2');
+    expr = expr.replace(/([A-Za-zπe])(\d)/g, '$1*$2');
+    expr = expr.replace(/\)\(/g, ')*(');
+
+    // Fix unclosed sqrt/cbrt
+    let fixParen = (pattern, name) => {
+      let regex = new RegExp(pattern, 'g');
+      let matches = [...expr.matchAll(regex)];
+      matches.forEach(m => {
+        let idx = expr.indexOf(m[0]);
+        let start = idx + m[0].length;
+        let depth = 1, p = start;
+        while (p < expr.length && depth > 0) {
+          if (expr[p] === '(') depth++;
+          if (expr[p] === ')') depth--;
+          p++;
+        }
+        if (depth > 0) {
+          expr = expr.slice(0, p) + ')' + expr.slice(p);
+        }
+      });
+    };
+    fixParen('Math\\.sqrt\\(', 'sqrt');
+    fixParen('Math\\.cbrt\\(', 'cbrt');
+
+    // Auto-close remaining parens
+    let opens = (expr.match(/\(/g) || []).length;
+    let closes = (expr.match(/\)/g) || []).length;
+    for (let i = 0; i < opens - closes; i++) expr += ')';
+
+    // Factorial
+    expr = expr.replace(/(\d+)!/g, 'fact($1)');
+
+    // nCr and nPr
+    expr = expr.replace(/nCr\(/g, 'nCr(');
+    expr = expr.replace(/nPr\(/g, 'nPr(');
+
+    try {
+      let result = eval(`
+        const sin_ = x => Math.sin(this._toRad(x));
+        const cos_ = x => Math.cos(this._toRad(x));
+        const tan_ = x => Math.tan(this._toRad(x));
+        const asin_ = x => this._fromRad(Math.asin(x));
+        const acos_ = x => this._fromRad(Math.acos(x));
+        const atan_ = x => this._fromRad(Math.atan(x));
+        const fact = n => { if(n<0||!Number.isInteger(n)) return NaN; if(n>170) return Infinity; let r=1; for(let i=2;i<=n;i++) r*=i; return r; };
+        const nCr = (n,r) => fact(n)/fact(r)/fact(n-r);
+        const nPr = (n,r) => fact(n)/fact(n-r);
+        (${expr})
+      `);
+
+      if (!isFinite(result)) throw new Error('Math Error');
+      this.lastAnswer = result;
+      this.history.push({ expr: this.display, result });
+      if (this.history.length > 50) this.history.shift();
+      this.display = this._formatResult(result);
+      this.historyIdx = this.history.length;
+    } catch(e) {
+      this.display = 'Math Error';
+      document.getElementById('display-main').classList.add('error');
+      setTimeout(() => document.getElementById('display-main').classList.remove('error'), 1500);
+    }
+    this._updateDisplay();
+    this._playKey();
+  }
+
+  _formatResult(r) {
+    if (typeof r !== 'number') return String(r);
+    if (!isFinite(r)) return r > 0 ? '∞' : '-∞';
+    if (Math.abs(r) < 1e-12 && r !== 0) return '0';
+    if (Math.abs(r) >= 1e10 || (Math.abs(r) < 1e-6 && r !== 0)) {
+      return r.toExponential(9).replace(/\.?0+e/, 'e').replace('e+', 'e');
+    }
+    let s = parseFloat(r.toPrecision(12)).toString();
+    if (s.length > 14) s = parseFloat(r.toPrecision(10)).toString();
+    return s;
+  }
+
+  _updateDisplay() {
+    document.getElementById('display-main').textContent = this.display;
+    document.getElementById('display-expr').textContent = '';
+    document.getElementById('display-sub').textContent = '';
+    let statusParts = [];
+    if (this.angleUnit !== 'deg') statusParts.push(this.angleUnit.toUpperCase());
+    if (this.mode !== 'comp') statusParts.push(this.mode.toUpperCase());
+    document.getElementById('display-status').textContent = statusParts.join(' ');
+  }
+
+  _updateIndicators() {
+    document.getElementById('shift-ind').parentElement.className =
+      'shift-indicator ' + (this.isShifted ? 'on' : 'off');
+    document.getElementById('alpha-ind').parentElement.className =
+      'alpha-indicator ' + (this.isAlpha ? 'on' : 'off');
+  }
+
+  _updateShiftLabels() {
+    document.getElementById('shift-sub').innerHTML = this.isShifted ? '&#x21E9;' : '&#x21E7;';
+  }
+
+  setMode(m) {
+    this.mode = m;
+    ['deg','rad','grad'].forEach(x => {
+      let el = document.getElementById('tag-' + x);
+      if (el) el.style.display = (x === this.angleUnit) ? 'block' : 'none';
+    });
+    let sdEl = document.getElementById('tag-sd');
+    let cmpltEl = document.getElementById('tag-cmplt');
+    if (sdEl) sdEl.style.display = (m === 'stat') ? 'block' : 'none';
+    if (cmpltEl) cmpltEl.style.display = (m === 'complex') ? 'block' : 'none';
+    this._updateDisplay();
+    this.closePanel();
+    this.showToast('Mode: ' + m.toUpperCase());
+  }
+
+  setAngleUnit(u) {
+    this.angleUnit = u;
+    ['deg','rad','grad'].forEach(x => {
+      let el = document.getElementById('tag-' + x);
+      if (el) el.style.display = (x === u) ? 'block' : 'none';
+    });
+    this._updateDisplay();
+    this.closePanel();
+    this.showToast('Angle: ' + u.toUpperCase());
+  }
+
+  showConstants() {
+    this.closePanel();
+    let list = Object.values(CONSTANTS).map(c =>
+      `${c.label} = ${this._formatResult(c.value)} — ${c.name}`
+    ).join('\n');
+    this.showToast('Constants loaded');
+    // Insert a random constant
+    let keys = Object.keys(CONSTANTS);
+    let k = keys[Math.floor(Math.random() * keys.length)];
+    let c = CONSTANTS[k];
+    this.display = this._formatResult(c.value);
+    this._updateDisplay();
+  }
+
+  showConversions() {
+    this.closePanel();
+    this.showToast('Unit conversions available');
+  }
+
+  showEngineering() {
+    this.closePanel();
+    this.showToast('Engineering notation');
+  }
+
+  closePanel() {
+    document.querySelectorAll('.menu-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+  }
+
+  togglePanel(id) {
+    let panel = document.getElementById(id);
+    let isActive = panel.classList.contains('active');
+    this.closePanel();
+    if (!isActive) {
+      panel.classList.add('active');
+      let name = id.replace('panel-','');
+      let btn = document.getElementById('menu-' + name);
+      if (btn) btn.classList.add('active');
+    }
+  }
+
+  showToast(msg) {
+    let t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  _playKey() {
+    let calc = document.getElementById('calc');
+    calc.style.transform = 'scale(0.995)';
+    setTimeout(() => calc.style.transform = '', 50);
+  }
+
+  _bindKeyboard() {
+    document.addEventListener('keydown', (e) => {
+      let key = e.key;
+      let handled = true;
+      if (/^[0-9.]$/.test(key)) this.input(key);
+      else if (key === '+') this.input('+');
+      else if (key === '-') this.input('−');
+      else if (key === '*') this.input('×');
+      else if (key === '/') this.input('÷');
+      else if (key === 'Enter' || key === '=') this.execute();
+      else if (key === 'Escape' || key === 'Delete' || key === 'Backspace') this.clear();
+      else if (key === 'ArrowUp') {
+        if (this.historyIdx > 0) {
+          this.historyIdx--;
+          let h = this.history[this.historyIdx];
+          if (h) { this.display = String(h.result); this._updateDisplay(); }
+        }
+      } else if (key === 'ArrowDown') {
+        if (this.historyIdx < this.history.length - 1) {
+          this.historyIdx++;
+          let h = this.history[this.historyIdx];
+          if (h) { this.display = String(h.result); this._updateDisplay(); }
+        }
+      } else if (key === 'p') { this.input('π'); }
+      else if (key === '^') this.input('^');
+      else if (key === '(') this.input('(');
+      else if (key === ')') this.input(')');
+      else if (key === '%') this.input('%');
+      else handled = false;
+      if (handled) e.preventDefault();
+    });
+  }
+}
+
+window.calc = new Calculator();
+
+// Menu button handlers
+document.getElementById('menu-math').addEventListener('click', () => calc.togglePanel('panel-math'));
+document.getElementById('menu-alph').addEventListener('click', () => calc.togglePanel('panel-alph'));
+document.getElementById('menu-mode').addEventListener('click', () => calc.togglePanel('panel-mode'));
+document.getElementById('menu-opt').addEventListener('click', () => calc.togglePanel('panel-opt'));
+
+// Close panels on click outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.menu-bar') && !e.target.closest('.menu-panel')) {
+    calc.closePanel();
+  }
+});
+
+// Touch ripple
+document.querySelectorAll('button').forEach(btn => {
+  btn.addEventListener('pointerdown', () => btn.classList.add('pressed'));
+  btn.addEventListener('pointerup', () => btn.classList.remove('pressed'));
+  btn.addEventListener('pointerleave', () => btn.classList.remove('pressed'));
+});
+
+})();
+</script>
+</body>
+</html>
