@@ -1,0 +1,42 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "fx-580VN X Emulator",
+  "version": "0.1.0",
+  "identifier": "dev.local.fx580vnx",
+  "build": {
+    "frontendDist": "../ui/dist",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "fx-580VN X Emulator",
+        "width": 440,
+        "height": 880,
+        "minWidth": 300,
+        "minHeight": 540,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true,
+        "backgroundColor": "#101114"
+      }
+    ],
+    "security": {
+      "csp": null
+    },
+    "withGlobalTauri": false
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

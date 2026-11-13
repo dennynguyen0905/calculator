@@ -3,6 +3,8 @@ dist/
 build/
 release/
 out/
+src-tauri/target/
+src-tauri/gen/
 .env
 .env.local
 .DS_Store

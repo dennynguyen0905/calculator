@@ -2,7 +2,7 @@
 
 An offline emulator of the **Casio fx-580VN X** scientific calculator: Natural-V.P.A.M. display with real 2D layout
 (stacked fractions, radicals, superscripts), exact arithmetic (fractions, radicals, π), the full key set with SHIFT /
-ALPHA legends, and 13 calculation modes. It runs in the browser and as a desktop app (Electron). There is no backend
+ALPHA legends, and 13 calculation modes. It runs in the browser and as a desktop app (Tauri/Rust). There is no backend
 and no network access.
 
 ![screenshot](docs/screenshot.png)
@@ -21,17 +21,14 @@ npm test               # 1000+ engine tests (Vitest, includes fast-check propert
 npm run lint           # ESLint (typescript-eslint)
 npm run build          # type-checks engine + UI, builds ui/dist
 
-npm run electron:start # build, then open the desktop app
-npm run electron:dev   # desktop app against the running dev server (run `npm run dev` first)
-npm run package        # installers / portable app into ./release  (electron-builder)
-npm run package:dir    # unpacked app only (fast; used to verify packaging)
+npm run tauri:dev      # desktop app against the running dev server (run `npm run dev` first)
+npm run package        # NSIS installer into src-tauri/target/release/bundle/nsis
+npm run package:dir    # unpacked binary only (fast; used to verify packaging)
 ```
 
-Requirements: Node 20+ (developed on Node 24). Tauri was the first choice for packaging, but it needs a Rust
-toolchain, which was not available; Electron is used instead.
-
-On Windows, `electron-builder` needs symlink privileges to unpack its code-signing tools. The config sets
-`signAndEditExecutable: false` so packaging works without Developer Mode (the exe then has the default Electron icon).
+Requirements: Node 20+ (developed on Node 24), Rust (stable, `rustup`), and on Windows the MSVC Build Tools
+("Desktop development with C++" workload) for the `link.exe` the Rust `x86_64-pc-windows-msvc` target needs.
+WebView2 (preinstalled on Windows 11) renders the UI; no Chromium is bundled.
 
 Developer tools (need `npx playwright install chromium` once):
 
@@ -39,7 +36,7 @@ Developer tools (need `npx playwright install chromium` once):
 node scripts/lcds.mjs out/m "mode|1 add 2 eq"   # screenshot of the LCD after key sequences (key ids, '|' separates runs)
 node scripts/shot.mjs out.png "frac 1 down 3 right eq"   # full page screenshot + console error check
 node scripts/e2e.mjs                             # browser end-to-end: input, persistence, all modes, phone viewport, console errors (npm run e2e)
-node scripts/electron-smoke.mjs                  # launches the Electron app and checks the display (npm run smoke:electron)
+node scripts/tauri-smoke.mjs                     # launches the packaged app, checks it stays alive (npm run smoke:tauri)
 ```
 
 ## Layout of the repository
@@ -57,7 +54,7 @@ engine/            pure TypeScript, zero UI dependencies (Vitest + fast-check)
   src/modes/                            comp (COMP+CMPLX) basen eqn ineq stat dist table matrix verify ratio spread
   tests/                                golden tests, key-sequence tests, property tests, fuzz tests
 ui/                React + Vite: LCD renderer, keypad, keyboard mapping, persistence, sound
-electron/          desktop wrapper (main.cjs)
+src-tauri/         desktop wrapper (Rust, `tauri.conf.json`, `src/main.rs` + `src/lib.rs`)
 docs/ASSUMPTIONS.md                     every uncertain device behaviour
 scripts/                                screenshot / smoke-test helpers
 legacy/            the single-file prototype that was in the folder before this project
@@ -66,7 +63,7 @@ legacy/            the single-file prototype that was in the folder before this 
 ## Using the calculator
 
 Click the keys, or use the physical keyboard (table below). State (variables, Ans, history, settings, STAT /
-matrix / table data) is saved in the browser's local storage / the Electron profile after every key press.
+matrix / table data) is saved in the browser's local storage / the WebView2 profile after every key press.
 `SHIFT`+`AC` switches the calculator off (blank LCD, memory kept), `ON` wakes it up again. The toolbar toggles
 light/dark theme and the key click sound, and `Reset` forgets the saved state.
 
@@ -215,7 +212,7 @@ mode and asserts that the engine never fails unexpectedly. To pin down a device 
 * Table: the x column cannot be edited directly; only the Start/End/Step prompts define it.
 * Matrix results are shown as a cell grid (no scaled 2D matrix); at most four matrices/vectors.
 * Fraction results of more than 10 digits per part, more than 4 terms in a sum, or π powers beyond ±2 are shown as decimals.
-* Installers were only built and checked on Windows (`release/win-unpacked`); macOS/Linux targets are configured but untested.
+* Installers were only built and checked on Windows (`src-tauri/target/release`); macOS/Linux targets are configured but untested.
 * The device's exact algorithms for `∫`, `d/dx` and SOLVE are unknown; results agree to about 10 significant digits for smooth cases.
 
 ## Maintenance and deployment
@@ -232,14 +229,14 @@ The desktop app is installed outside the repository, in `D:\C\program\fx580vnx\`
 
 ```powershell
 npm test; npm run lint                      # must be green
-$env:CSC_IDENTITY_AUTO_DISCOVERY="false"
-npm run package:dir                         # build ui + electron-builder --dir  ->  release\win-unpacked
-# close the running app first, then replace the program files but KEEP the data folder:
-robocopy release\win-unpacked D:\C\program\fx580vnx /MIR /XD data
+npm run package:dir                         # build ui + cargo build --release -> src-tauri\target\release\fx580vnx.exe
+# close the running app first, then replace the executable (the "data" folder next to it is untouched):
+Copy-Item src-tauri\target\release\fx580vnx.exe "D:\C\program\fx580vnx\fx-580VN X Emulator.exe" -Force
 ```
 
-(`/XD data` keeps the user's saved state. If the shortcut is lost, recreate it with `WScript.Shell`
-`CreateShortcut`: target `D:\C\program\fx580vnx\fx-580VN X Emulator.exe`, icon `...\icon.ico`.)
+(The frontend is embedded in the binary at compile time, so this is a single-file copy — no directory sync needed.
+If the shortcut is lost, recreate it with `WScript.Shell` `CreateShortcut`: target
+`D:\C\program\fx580vnx\fx-580VN X Emulator.exe`, icon `...\icon.ico`.)
 
 ### Routine checks
 
@@ -248,11 +245,10 @@ robocopy release\win-unpacked D:\C\program\fx580vnx /MIR /XD data
 | `npm test` | all engine tests (~1080) |
 | `npm run lint` / `npm run build` | style and type-check (engine + ui) / production bundle |
 | `npm run e2e` | browser end-to-end check (needs a prior `npm run build`) |
-| `npm run smoke:electron` | launches the packaged-style Electron app against `ui/dist` |
+| `npm run smoke:tauri` | launches the packaged binary and checks it stays alive |
 | `node scripts/lcds.mjs <prefix> "<keys>\|<keys>"` | LCD screenshots after key sequences |
 
 ### Updating dependencies
 
-Run `npm update`, then the checks above. Pinned majors worth watching: `decimal.js` (all numerics), `vite`,
-`electron` (33), `electron-builder` (25). npm may block install scripts: if Electron's binary is missing run
-`node node_modules/electron/install.js`.
+Run `npm update`, then the checks above. For the Rust side run `cargo update` inside `src-tauri/`. Pinned majors worth
+watching: `decimal.js` (all numerics), `vite`, `tauri` (2.x).

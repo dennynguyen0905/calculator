@@ -11,9 +11,9 @@ Offline emulator of the Casio fx-580VN X. npm workspaces:
 |---|---|
 | `engine/` | pure TypeScript, **no UI/DOM dependency**, all calculator logic + Vitest tests |
 | `ui/` | React + Vite front end (LCD renderer, keypad, keyboard map, persistence, click sound) |
-| `electron/` | desktop wrapper (`main.cjs`, `icon.*`) |
+| `src-tauri/` | desktop wrapper (Rust, `tauri.conf.json`, `src/main.rs`, `src/lib.rs`, `icons/`) |
 | `docs/` | `ASSUMPTIONS.md`, screenshot |
-| `scripts/` | dev helpers: `lcds.mjs`, `shot.mjs`, `e2e.mjs`, `electron-smoke.mjs` |
+| `scripts/` | dev helpers: `lcds.mjs`, `shot.mjs`, `e2e.mjs`, `tauri-smoke.mjs` |
 | `legacy/` | an old single-file prototype; ignored by lint/build, do not extend |
 
 The UI never contains calculator logic: it sends **key ids** to `Calculator.press(id)` and renders `calculator.screen`.
@@ -27,8 +27,9 @@ npm test               # engine tests (must stay green)
 npm run lint           # eslint; must stay clean
 npm run build          # tsc (engine + ui) + vite build -> ui/dist
 npm run e2e            # browser e2e (needs build first), asserts no console errors
-npm run smoke:electron # Electron against ui/dist
-npm run package:dir    # unpacked desktop app -> release/win-unpacked
+npm run tauri:dev      # desktop app against the running dev server (run `npm run dev` first)
+npm run smoke:tauri    # launches the packaged binary, checks it stays alive
+npm run package:dir    # desktop app binary -> src-tauri/target/release
 ```
 
 Definition of "done" for any change: `npm test`, `npm run lint`, `npm run build` all pass, and for UI changes also
@@ -110,16 +111,28 @@ Write key-sequence tests (see below) and add the mode to the fuzz start modes (`
 
 ## 7. Packaging
 
-`electron/main.cjs` loads `ui/dist/index.html`; when packaged it stores user data in `<exe dir>\data`.
-`package.json` → `build` configures electron-builder; Windows uses `signAndEditExecutable:false` (no symlink privilege
-needed). Only `--dir` builds are verified; NSIS/portable need Windows Developer Mode.
+`src-tauri/src/main.rs` redirects WebView2's data folder to `<exe dir>\data` before `app_lib::run()` creates the
+webview, so the install stays self-contained (mirrors the old Electron `userData` override). `src-tauri/src/lib.rs`
+registers `tauri-plugin-single-instance` (focuses the existing window instead of opening a second one) and the dev
+logger. `src-tauri/tauri.conf.json` sets the window size/title/icon and `build.frontendDist` (`../ui/dist`, embedded
+into the binary at compile time — a build is a single `.exe`, no companion asset folder). Needs Rust (`rustup`) and,
+on Windows, MSVC Build Tools (`link.exe`) for the `x86_64-pc-windows-msvc` target. `npm run package:dir` (`tauri
+build --no-bundle`) is verified; `npm run package` (NSIS/MSI installers) is configured but less exercised.
 
 ## 8. Pitfalls seen during development
 
 * Shell: complex heredocs mixing quotes can fail in the Bash tool — create files with an editor/Write tool and run
   small script files. PowerShell's COM `CreateShortcut` rejects non-ASCII target paths (the repo path contains `ị`);
   install the app to an ASCII path (currently `D:\C\program\fx580vnx`).
-* npm may block package install scripts (Electron binary): `node node_modules/electron/install.js`.
+* Rust `x86_64-pc-windows-msvc` has no linker of its own — it needs `link.exe` from MSVC Build Tools (`winget install
+  Microsoft.VisualStudio.2022.BuildTools --override "--add Microsoft.VisualStudio.Workload.VCTools"`). That installer
+  needs an interactive UAC approval; it can't be driven from a fully unattended/background shell.
+* `scripts/tauri-smoke.mjs` only checks the packaged binary starts and stays alive — Playwright can't drive the
+  native WebView2 window the way it could drive Electron's `_electron` launcher. Deeper UI smoke-testing of the
+  packaged app would need `tauri-driver` (WebDriver), which isn't set up.
+* MSI bundling (WiX's `light.exe`) fails on this repo's path (`error LGHT0001`, `FileNotFoundException`): the
+  legacy .NET Framework WiX toolchain chokes on the non-ASCII `ị` in `nghịch`. `tauri.conf.json` → `bundle.targets`
+  is therefore `["nsis"]` only, not `["nsis", "msi"]`. NSIS (`makensis`) handles the same path fine.
 * Don't rename key ids or command strings casually: tests, scripts and docs reference them (`'eq'`, `'shift'`,
   `'alpha'`, `'sd'`, `'integ'` …).
 * `Decimal` instances come from the cloned `D` in `dec.ts` (60 digits). Never mix with the global `decimal.js` default

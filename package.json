@@ -14,52 +14,22 @@
     "typecheck": "tsc -p engine/tsconfig.json --noEmit && tsc -p ui/tsconfig.json --noEmit",
     "test": "npm run test -w engine",
     "lint": "eslint .",
-    "electron:dev": "electron electron/main.cjs --dev",
-    "electron:start": "npm run build && electron electron/main.cjs",
-    "package": "npm run build && electron-builder",
-    "package:dir": "npm run build && electron-builder --dir",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "package": "tauri build",
+    "package:dir": "tauri build --no-bundle",
     "e2e": "node scripts/e2e.mjs",
-    "smoke:electron": "node scripts/electron-smoke.mjs"
+    "smoke:tauri": "node scripts/tauri-smoke.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
+    "@tauri-apps/cli": "^2.12.4",
     "@types/node": "^26.6.4",
-    "electron": "^33.4.11",
-    "electron-builder": "^25.1.8",
     "eslint": "^9.0.0",
     "globals": "^15.0.0",
     "playwright": "^1.64.0",
     "typescript": "^5.6.0",
     "typescript-eslint": "^8.0.0"
-  },
-  "main": "electron/main.cjs",
-  "build": {
-    "appId": "dev.local.fx580vnx",
-    "productName": "fx-580VN X Emulator",
-    "directories": {
-      "output": "release"
-    },
-    "files": [
-      "electron/**/*",
-      "ui/dist/**/*",
-      "package.json"
-    ],
-    "win": {
-      "target": [
-        "nsis",
-        "portable"
-      ],
-      "signAndEditExecutable": false
-    },
-    "mac": {
-      "target": "dmg",
-      "category": "public.app-category.education"
-    },
-    "linux": {
-      "target": "AppImage",
-      "category": "Education"
-    },
-    "asar": true
   },
   "author": "fx580vnx contributors"
 }
